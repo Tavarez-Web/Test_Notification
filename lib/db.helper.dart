@@ -7,7 +7,7 @@ class DatabaseHelper {
   //Create a private constructor
   DatabaseHelper._();
 
-  static const databaseName = 'notifications_push_v1.db';
+  static const databaseName = 'notifications_push_v2.db';
 
   static final DatabaseHelper instance = DatabaseHelper._();
   static late Database _database;
@@ -24,7 +24,7 @@ class DatabaseHelper {
     var r = await openDatabase(join(await getDatabasesPath(), databaseName),
         version: 1, onCreate: (Database db, int version) async {
       await db.execute(
-          "CREATE TABLE Notification(id INTEGER PRIMARY KEY AUTOINCREMENT, subject TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, imageUrl TEXT,  type TEXT)");
+          "CREATE TABLE Notification(id INTEGER PRIMARY KEY AUTOINCREMENT, subject TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, imageUrl TEXT,  type TEXT, data TEXT)");
       await db.execute("""CREATE TABLE Amount(
             amounts_list_id INTEGER NOT NULL,
             name TEXT NOT NULL, 
@@ -40,24 +40,6 @@ class DatabaseHelper {
 
   insertNotification(NotificationModel noti) async {
     final db = await database;
-    if (noti.data == null) {
-      var res = await db.insert(NotificationModel.TABLENAME, noti.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      return;
-    }
-
-    noti.data?.forEach((element) async {
-      var amountInfo = {
-        "value": element['value'].toString(),
-        "name": element['name'].toString(),
-        "amounts_list_id": element['value'].hashCode
-      };
-      await db.insert(
-        NotificationModel.SUB_TABLENAME,
-        amountInfo,
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    });
 
     await db.insert(
       NotificationModel.TABLENAME,
@@ -79,8 +61,10 @@ class DatabaseHelper {
           type: maps[i]['type'],
           imageUrl: maps[i]['imageUrl'],
           message: maps[i]['message'],
-          data: maps[i]['data']);
+          data: maps[i]['data'].toString());
     });
+
+    print(list);
 
     list.sort((a, b) => b.id!.compareTo(a.id!));
 
@@ -106,26 +90,14 @@ class DatabaseHelper {
     var db = await database;
     var result = await db
         .query(NotificationModel.TABLENAME, where: 'id = ?', whereArgs: [id]);
+    print("result[0] $result");
 
-    print("getNotificationById" + result.toString());
+    var r = List<Map<String, dynamic>>.generate(
+        result.length, (index) => Map<String, dynamic>.from(result[index]),
+        growable: true);
 
-    return NotificationModel.fromJSON(result.first);
-  }
-
-    Future<List<TypeNotification>> getDataNotificationById(int id) async {
-    var db = await database;
-    var result = await db
-        .query(NotificationModel.SUB_TABLENAME, where: 'amounts_list_id = ?', whereArgs: [id]);
-
-     var result2 = await db
-        .query(NotificationModel.SUB_TABLENAME);
-
-    print("getDataNotificationById" + result.toString());
-    print("getDataNotificationById2" + result2.toString());
-
-    return List.generate(result2.length, (index)=> TypeNotification.fromJSON(result2[index]));
-  }
   
+
+    return NotificationModel.fromJsonNotificationV2(r[0] as dynamic);
+  }
 }
-
-
