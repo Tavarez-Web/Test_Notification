@@ -9,7 +9,7 @@ import '../../notification_model.dart';
 
 class DetailScreen extends StatefulWidget {
   final String pushMessaheId;
-
+  
   const DetailScreen({Key? key, required this.pushMessaheId}) : super(key: key);
 
   @override
@@ -22,6 +22,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   @override
   void initState() {
+    print(widget.pushMessaheId);
     super.initState();
     loadData();
   }
@@ -29,7 +30,7 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> loadData() async {
     var notification = await DatabaseHelper.instance
         .getNotificationById(int.parse(widget.pushMessaheId));
-
+  
     setState(() {
       notificationModel = notification;
       dataNotification = extractDataFromModel(notification);

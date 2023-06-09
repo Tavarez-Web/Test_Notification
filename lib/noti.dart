@@ -13,46 +13,40 @@ import 'notification_model.dart';
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-  var messageData = message.data;
-  var data = NotificationModel.fromJsonNotification(messageData);
+ 
+    var data = message.data;
+    var _data = NotificationModel.fromJsonNotification(data);
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'high_importance_channel', // id
+      'Notificaciones de alta importancia', // título
+      // description: 'Este canal se utiliza para notificaciones importantes.',
+      // descripción
+      importance: Importance.high,
+      icon: null, // android?.smallIcon,
+      // otras propiedades...
+    );
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      subtitle: _data.title,
+      sound: "default",
+      threadIdentifier: _data.id.toString(),
+    );
+    var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
 
-  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    await flutterLocalNotificationsPlugin.show(_data.message.hashCode,
+        _data.title, _data.message, platformChannelSpecifics,
+        payload: jsonEncode(message.data));
 
-  if (data.imageUrl != null && data.imageUrl != null) {
-    log("h2");
-    // print("la _data${data.message}");
-    return NotificationHandler().showBigPictureNotification(message);
-  } else if (data.imageUrl != null) {
-    return NotificationHandler()
-        .showBigPictureNotificationHiddenLargeIcon(message);
-  } else {
-    await flutterLocalNotificationsPlugin.show(
-        data.id,
-        data.title,
-        data.message,
-        NotificationDetails(
-          android: const AndroidNotificationDetails(
-            'high_importance_channel', // id
-            'Notificaciones de alta importancia', // título
-            channelDescription:
-                'Este canal se utiliza para notificaciones importantes.',
-            // descripción
-            importance: Importance.high,
-            icon: null, // android?.smallIcon,
-            // otras propiedades...
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-            subtitle: data.title,
-            sound: "default",
-            threadIdentifier: data.id.toString(),
-          ),
-        ));
-    await DatabaseHelper.instance.initializeDatabase();
-    DatabaseHelper.instance.insertNotification(data);
-  }
+
+          await DatabaseHelper.instance.initializeDatabase();
+    DatabaseHelper.instance.insertNotification(_data);
+
+  
 }
 
 class NotificationHandler {
@@ -70,18 +64,55 @@ class NotificationHandler {
       // descripción
       importance: Importance.high,
     );
+var initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
+    var initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+          onDidReceiveLocalNotification:
+              (int? id, String? title, String? body, String? payload) async {
+            log("onDidReceiveLocalNotification $id $title $body $payload");
+          }),
+    );
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse:
+            NotificationHandler.onDidReceiveNotificationResponse);
+
+    /// Create an Android Notification Channel.
+    ///
+    /// We use this channel in the `AndroidManifest.xml` file to override the
+    /// default FCM channel to enable heads up notifications.
     flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
-    // }
+
+    flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+
+    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    getToken();
   }
+
+
+
 
  Future<void> getToken() async {
     var token = await FirebaseMessaging.instance.getToken();
     log("token =$token");
   }
+
+
+
 
   Future<dynamic> firebaseMessagingForegroundHandler(
       RemoteMessage message) async {
@@ -104,7 +135,7 @@ class NotificationHandler {
       presentSound: true,
       subtitle: _data.title,
       sound: "default",
-      threadIdentifier: _data.message.hashCode.toString(),
+      threadIdentifier: _data.id.toString(),
     );
     var platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -114,7 +145,14 @@ class NotificationHandler {
     await flutterLocalNotificationsPlugin.show(_data.message.hashCode,
         _data.title, _data.message, platformChannelSpecifics,
         payload: jsonEncode(message.data));
+
+
+          await DatabaseHelper.instance.initializeDatabase();
+    DatabaseHelper.instance.insertNotification(_data);
   }
+
+
+
 
   Future<void> showBigPictureNotification(RemoteMessage message) async {
     var image = message.data?["image"] as String?;
@@ -142,6 +180,9 @@ class NotificationHandler {
     }
   }
 
+
+
+
   Future<String> _downloadAndSaveFile(String url, String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     final filePath = '${directory.path}/$fileName';
@@ -150,6 +191,9 @@ class NotificationHandler {
     await file.writeAsBytes(response.bodyBytes);
     return filePath;
   }
+
+
+
 
   Future<void> showBigPictureNotificationHiddenLargeIcon(
       RemoteMessage message) async {
@@ -167,7 +211,7 @@ class NotificationHandler {
     var platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
-      message.data!["title"].hashCode,
+      message.data!["message"].hashCode,
       message.data!["title"] as String,
       message.data!["message"] as String,
       platformChannelSpecifics,
@@ -176,7 +220,7 @@ class NotificationHandler {
   }
 
   static void onDidReceiveNotificationResponse(NotificationResponse response) {
-    print(response.id);
+    print("ID NOTIIIIII${response.id}");
     appRouter.push('/push-details/${response.id.toString()}');
   }
 }

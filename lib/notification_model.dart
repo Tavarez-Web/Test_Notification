@@ -81,7 +81,7 @@ class NotificationModel {
     var list = subData['data'];
 
     return NotificationModel(
-        id: subData['message'].hashCode + Random().nextInt(1000),
+        id: subData['message'].hashCode ,
         subject: subData['subject'],
         title: subData['title'],
         type: subData['type'],

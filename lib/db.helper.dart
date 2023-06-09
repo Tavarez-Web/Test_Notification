@@ -38,9 +38,17 @@ class DatabaseHelper {
     return r;
   }
 
+  var idIndex = 0;
+
   insertNotification(NotificationModel noti) async {
     final db = await database;
+    var query = await db.query(NotificationModel.TABLENAME,
+        where: "id = ?", whereArgs: [noti.id]);
 
+    do {
+      idIndex++;
+    } while (query.length < 0);
+    noti.id = idIndex;
     await db.insert(
       NotificationModel.TABLENAME,
       noti.toMap(),
@@ -86,6 +94,17 @@ class DatabaseHelper {
     db.delete(NotificationModel.TABLENAME, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<NotificationModel> getNotificationByIdv2(int id) async {
+    var db = await database;
+    var result = await db
+        .query(NotificationModel.TABLENAME, where: 'id = ?', whereArgs: [id]);
+    // print("result[0] $result");
+
+    print("getNotificationById" + result.toString());
+
+    return NotificationModel.fromJSON(result.first);
+  }
+
   Future<NotificationModel> getNotificationById(int id) async {
     var db = await database;
     var result = await db
@@ -95,8 +114,6 @@ class DatabaseHelper {
     var r = List<Map<String, dynamic>>.generate(
         result.length, (index) => Map<String, dynamic>.from(result[index]),
         growable: true);
-
-  
 
     return NotificationModel.fromJsonNotificationV2(r[0] as dynamic);
   }
