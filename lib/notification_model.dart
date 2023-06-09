@@ -33,6 +33,7 @@ class TypeNotification {
 
 class NotificationModel {
   late int id;
+  late String? idSolicitudNotificacion;
   late String? subject;
   late String? title;
   late String? type;
@@ -46,6 +47,7 @@ class NotificationModel {
 
   NotificationModel(
       {this.id = 0,
+      this.idSolicitudNotificacion,
       this.subject,
       this.title,
       this.type,
@@ -55,6 +57,7 @@ class NotificationModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'idSolicitudNotificacion': idSolicitudNotificacion,
       'subject': subject,
       'title': title,
       'type': type,
@@ -66,7 +69,8 @@ class NotificationModel {
 
   factory NotificationModel.fromJSON(Map json) {
     return NotificationModel(
-      id: json['id'],
+      id: json['idSolicitudNotificacion'],
+      idSolicitudNotificacion: json['idSolicitudNotificacion'],
       subject: json['subject'],
       title: json['title'],
       type: json['type'],
@@ -82,6 +86,7 @@ class NotificationModel {
 
     return NotificationModel(
         id: subData['message'].hashCode ,
+        idSolicitudNotificacion: subData['idSolicitudNotificacion'],
         subject: subData['subject'],
         title: subData['title'],
         type: subData['type'],
@@ -100,6 +105,7 @@ class NotificationModel {
 
     return NotificationModel(
       id: subData['id'],
+      idSolicitudNotificacion: subData['idSolicitudNotificacion'],
       subject: subData['subject'],
       title: subData['title'],
       type: subData['type'],

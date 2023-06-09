@@ -1,13 +1,13 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-
+import 'dart:math';
 import 'notification_model.dart';
 
 class DatabaseHelper {
   //Create a private constructor
   DatabaseHelper._();
 
-  static const databaseName = 'notifications_push_v2.db';
+  static const databaseName = 'notifications_push_v3.db';
 
   static final DatabaseHelper instance = DatabaseHelper._();
   static late Database _database;
@@ -24,7 +24,7 @@ class DatabaseHelper {
     var r = await openDatabase(join(await getDatabasesPath(), databaseName),
         version: 1, onCreate: (Database db, int version) async {
       await db.execute(
-          "CREATE TABLE Notification(id INTEGER PRIMARY KEY AUTOINCREMENT, subject TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, imageUrl TEXT,  type TEXT, data TEXT)");
+          "CREATE TABLE Notification(id INTEGER PRIMARY KEY AUTOINCREMENT, idSolicitudNotificacion TEXT NOT NULL, subject TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, imageUrl TEXT,  type TEXT, data TEXT)");
       await db.execute("""CREATE TABLE Amount(
             amounts_list_id INTEGER NOT NULL,
             name TEXT NOT NULL, 
@@ -48,7 +48,11 @@ class DatabaseHelper {
     do {
       idIndex++;
     } while (query.length < 0);
-    noti.id = idIndex;
+
+    final now = DateTime.now();
+
+    print("hashcode ${now.hashCode} seconds ${now.second}");
+    noti.id = now.millisecond;
     await db.insert(
       NotificationModel.TABLENAME,
       noti.toMap(),
@@ -64,6 +68,7 @@ class DatabaseHelper {
     var list = List.generate(maps.length, (i) {
       return NotificationModel(
           id: maps[i]['id'],
+          idSolicitudNotificacion: maps[i]['idSolicitudNotificacion'],
           subject: maps[i]['subject'],
           title: maps[i]['title'],
           type: maps[i]['type'],
@@ -106,6 +111,8 @@ class DatabaseHelper {
   }
 
   Future<NotificationModel> getNotificationById(int id) async {
+    print("id notification ${id}");
+
     var db = await database;
     var result = await db
         .query(NotificationModel.TABLENAME, where: 'id = ?', whereArgs: [id]);

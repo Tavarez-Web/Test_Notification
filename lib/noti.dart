@@ -13,40 +13,37 @@ import 'notification_model.dart';
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
- 
-    var data = message.data;
-    var _data = NotificationModel.fromJsonNotification(data);
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'high_importance_channel', // id
-      'Notificaciones de alta importancia', // título
-      // description: 'Este canal se utiliza para notificaciones importantes.',
-      // descripción
-      importance: Importance.high,
-      icon: null, // android?.smallIcon,
-      // otras propiedades...
-    );
-    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      subtitle: _data.title,
-      sound: "default",
-      threadIdentifier: _data.id.toString(),
-    );
-    var platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-      iOS: iOSPlatformChannelSpecifics,
-    );
 
-    await flutterLocalNotificationsPlugin.show(_data.message.hashCode,
-        _data.title, _data.message, platformChannelSpecifics,
-        payload: jsonEncode(message.data));
+  var data = message.data;
+  var _data = NotificationModel.fromJsonNotification(data);
+  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'high_importance_channel', // id
+    'Notificaciones de alta importancia', // título
+    // description: 'Este canal se utiliza para notificaciones importantes.',
+    // descripción
+    importance: Importance.high,
+    icon: null, // android?.smallIcon,
+    // otras propiedades...
+  );
+  var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+    subtitle: _data.title,
+    sound: "default",
+    threadIdentifier: _data.id.toString(),
+  );
+  var platformChannelSpecifics = NotificationDetails(
+    android: androidPlatformChannelSpecifics,
+    iOS: iOSPlatformChannelSpecifics,
+  );
 
+  await flutterLocalNotificationsPlugin.show(_data.id,
+      _data.title, _data.message, platformChannelSpecifics,
+      payload: jsonEncode(message.data));
 
-          await DatabaseHelper.instance.initializeDatabase();
-    DatabaseHelper.instance.insertNotification(_data);
-
-  
+  await DatabaseHelper.instance.initializeDatabase();
+  DatabaseHelper.instance.insertNotification(_data);
 }
 
 class NotificationHandler {
@@ -64,7 +61,7 @@ class NotificationHandler {
       // descripción
       importance: Importance.high,
     );
-var initializationSettingsAndroid =
+    var initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
     var initializationSettings = InitializationSettings(
@@ -74,7 +71,7 @@ var initializationSettingsAndroid =
           requestBadgePermission: true,
           requestSoundPermission: true,
           onDidReceiveLocalNotification:
-              (int? id, String? title, String? body, String? payload) async {
+              (int? id,  String? title, String? body, String? payload) async {
             log("onDidReceiveLocalNotification $id $title $body $payload");
           }),
     );
@@ -103,16 +100,10 @@ var initializationSettingsAndroid =
     getToken();
   }
 
-
-
-
- Future<void> getToken() async {
+  Future<void> getToken() async {
     var token = await FirebaseMessaging.instance.getToken();
     log("token =$token");
   }
-
-
-
 
   Future<dynamic> firebaseMessagingForegroundHandler(
       RemoteMessage message) async {
@@ -120,6 +111,10 @@ var initializationSettingsAndroid =
         FlutterLocalNotificationsPlugin();
     var data = message.data;
     var _data = NotificationModel.fromJsonNotification(data);
+
+    await DatabaseHelper.instance.initializeDatabase();
+    DatabaseHelper.instance.insertNotification(_data);
+
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'high_importance_channel', // id
       'Notificaciones de alta importancia', // título
@@ -142,17 +137,10 @@ var initializationSettingsAndroid =
       iOS: iOSPlatformChannelSpecifics,
     );
 
-    await flutterLocalNotificationsPlugin.show(_data.message.hashCode,
+    await flutterLocalNotificationsPlugin.show(_data.id,
         _data.title, _data.message, platformChannelSpecifics,
         payload: jsonEncode(message.data));
-
-
-          await DatabaseHelper.instance.initializeDatabase();
-    DatabaseHelper.instance.insertNotification(_data);
   }
-
-
-
 
   Future<void> showBigPictureNotification(RemoteMessage message) async {
     var image = message.data?["image"] as String?;
@@ -180,9 +168,6 @@ var initializationSettingsAndroid =
     }
   }
 
-
-
-
   Future<String> _downloadAndSaveFile(String url, String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     final filePath = '${directory.path}/$fileName';
@@ -191,9 +176,6 @@ var initializationSettingsAndroid =
     await file.writeAsBytes(response.bodyBytes);
     return filePath;
   }
-
-
-
 
   Future<void> showBigPictureNotificationHiddenLargeIcon(
       RemoteMessage message) async {

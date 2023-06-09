@@ -104,6 +104,14 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
+                // Text(
+                //   notificationModel!.idSolicitudNotificacion ?? '',
+                //   style: TextStyle(
+                //     color: Color.fromRGBO(0, 43, 84, 1),
+                //     fontWeight: FontWeight.w500,
+                //     fontSize: 15,
+                //   ),
+                // ),const SizedBox(height: 30),
                 Text(
                   notificationModel!.message ?? '',
                   style: TextStyle(
@@ -155,6 +163,7 @@ class _DetailScreenState extends State<DetailScreen> {
         ),
       ),
       floatingActionButton: MyButton(),
+      // bottomSheet: MyButton(),
     );
   }
 }

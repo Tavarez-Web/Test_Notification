@@ -22,11 +22,8 @@ void main() async {
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     Map<String, dynamic> _default = message.data;
-  
-    print(_default);
+      print(_default);
 
-    DatabaseHelper.instance
-        .insertNotification(NotificationModel.fromJsonNotification(_default));
     if (message.data.isNotEmpty) {
       _notificationHandler.firebaseMessagingForegroundHandler(message);
     }
