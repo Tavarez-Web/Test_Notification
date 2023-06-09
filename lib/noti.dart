@@ -78,6 +78,11 @@ class NotificationHandler {
     // }
   }
 
+ Future<void> getToken() async {
+    var token = await FirebaseMessaging.instance.getToken();
+    log("token =$token");
+  }
+
   Future<dynamic> firebaseMessagingForegroundHandler(
       RemoteMessage message) async {
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =

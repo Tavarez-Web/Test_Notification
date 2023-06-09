@@ -1,46 +1,4 @@
-// import 'dart:convert';
 
-// class NotificationModel {
-//   late int? id;
-//   late String? title;
-//   late String? message;
-//   late String? imageURL;
-//   late String? action;
-//   static const String TABLENAME = "Notification";
-
-//   NotificationModel(
-//       {this.id, this.title, this.message, this.imageURL, this.action});
-
-//   Map<String, dynamic> toMap() {
-//     return {
-//       'id': id,
-//       'title': title,
-//       'message': message,
-//       'imageURL': imageURL,
-//       'action': action
-//     };
-//   }
-
-//   factory NotificationModel.fromJSON(Map json) {
-//     return NotificationModel(
-//         action: json['action'],
-//         id: json['id'],
-//         imageURL: json['imageURL'],
-//         message: json['message'],
-//         title: json['title']);
-//   }
-
-//   factory NotificationModel.fromJsonNotification(dynamic json) {
-//     var data = json['default'];
-//     var subData = jsonDecode(data)['data'];
-//     return NotificationModel(
-//         action: subData['action'],
-//         id: subData['message'].hashCode,
-//         imageURL: subData['imageURL'],
-//         message: subData['message'],
-//         title: subData['title']);
-//   }
-// }
 import 'dart:math';
 import 'dart:convert';
 import 'dart:ffi';

@@ -66,7 +66,7 @@ class DatabaseHelper {
 
     print(list);
 
-    list.sort((a, b) => b.id!.compareTo(a.id!));
+    list.sort((b, a) => b.id!.compareTo(a.id!));
 
     return list;
   }

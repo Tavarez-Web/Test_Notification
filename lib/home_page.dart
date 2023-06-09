@@ -22,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Color.fromRGBO(38, 92, 178, 1),
         title: const Text('Flutter SNS Messaging'),
         actions: [
           IconButton(onPressed: () {

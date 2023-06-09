@@ -10,153 +10,173 @@ import '../../notification_model.dart';
 class DetailScreen extends StatefulWidget {
   final String pushMessaheId;
 
-  const DetailScreen({super.key, required this.pushMessaheId});
+  const DetailScreen({Key? key, required this.pushMessaheId}) : super(key: key);
 
   @override
   _DetailScreenState createState() => _DetailScreenState();
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  NotificationModel? notificationModel = NotificationModel();
-  List<TypeNotification> dataNotification = List.empty();
-  String data = "";
+  NotificationModel? notificationModel;
+  List<TypeNotification> dataNotification = [];
+
   @override
   void initState() {
     super.initState();
-   
-    Future.delayed(Duration.zero, () async {
-      var notification = await DatabaseHelper.instance
-          .getNotificationById(int.parse(widget.pushMessaheId));
+    loadData();
+  }
 
-      setState(() {
-        notificationModel = notification;
-        data = notificationModel!.data!;
-      });
+  Future<void> loadData() async {
+    var notification = await DatabaseHelper.instance
+        .getNotificationById(int.parse(widget.pushMessaheId));
 
-      String arrayString = jsonEncode(data);
-      List<String> arrayItems = arrayString.split(', ');
-      var myObjects = arrayItems.map((item) {
-        List<String> keyValue = item.split(': ');
-        String name = keyValue[0].trim().replaceAll('{', '');
-        String value = keyValue[1].trim().replaceAll('}', '');
-
-        print(name);
-        print(value);
-
-        return TypeNotification(name: name, value: value);
-      }).toList();
-   
-    dataNotification = myObjects;
-    
+    setState(() {
+      notificationModel = notification;
+      dataNotification = extractDataFromModel(notification);
     });
+  }
+
+  List<TypeNotification> extractDataFromModel(NotificationModel? model) {
+    if (model == null) return [];
+
+    String data = model.data ?? "";
+    String arrayString = jsonEncode(data);
+    List<String> arrayItems = arrayString.split(', ');
+
+    return arrayItems
+        .map((item) {
+          List<String> keyValue = item.split(': ');
+          if (keyValue.length >= 2) {
+            String name = keyValue[0]
+                .trim()
+                .replaceAll('{', '')
+                .replaceAll('[', '')
+                .replaceAll('"', '');
+
+            String value =
+                keyValue[1].replaceAll('}', '').replaceAll(']\"', '');
+
+            name = name
+                .replaceAll("name", "\"name\"")
+                .replaceAll("value", "\"value\"");
+
+            return TypeNotification(name: name, value: value);
+          }
+        })
+        .where((element) => element != null)
+        .cast<TypeNotification>()
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    // final PushMessage? message = context.watch<NotificationsBloc>()
-    // .getMessageById( pushMessaheId );
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Color.fromRGBO(38, 92, 178, 1),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
             appRouter.pop(context);
           },
         ),
-        title: const Text('Detalles Push'),
+        title: Text(notificationModel?.subject ?? 'Detalles'),
       ),
-      body: (notificationModel != null)
-          ? DetailsView(message: notificationModel!, dataNotification: dataNotification)
-          : const Center(
-              child: Text('Notificacion no existe'),
-            ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (notificationModel != null) ...[
+                if (notificationModel!.imageUrl != null &&
+                    notificationModel!.imageUrl!.isNotEmpty)
+                  ClipRRect(
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: Image.network(notificationModel!.imageUrl!, )),
+                const SizedBox(height: 10),
+                Text(
+                  notificationModel!.title ?? '',
+                  style: TextStyle(
+                    color: Color.fromRGBO(0, 43, 84, 1),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Text(
+                  notificationModel!.message ?? '',
+                  style: TextStyle(
+                    color: Color.fromRGBO(0, 43, 84, 1),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  decoration: BoxDecoration(
+                      // Color de fondo
+                      ),
+                  child: SizedBox(
+                    width: 400,
+                    height: MediaQuery.of(context).size.width * 1,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: dataNotification.length,
+                      itemBuilder: (context, index) {
+                        final isFirst = index % 2 == 0;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              dataNotification[index].value ?? '',
+                              style: TextStyle(
+                                color: isFirst
+                                    ? Color.fromRGBO(1, 95, 184, 1)
+                                    : null,
+                                fontWeight: isFirst ? FontWeight.bold : null,
+                                fontSize: 16,
+                                height: isFirst ? 2.5 : 1,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ] else ...[
+                const Center(
+                  child: Text('Notificación no existe'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: MyButton(),
     );
   }
 }
 
-class DetailsView extends StatefulWidget {
-  final NotificationModel message;
-  //  final TypeNotification dataNotification;
-   final List<TypeNotification> dataNotification;
-   const DetailsView({required this.message,required this.dataNotification});
-
-  @override
-  _DetailsView createState() => _DetailsView();
-}
-
-class _DetailsView extends State<DetailsView> {
-  List<TypeNotification> dataNotification = List.empty();
-
-  bool firstTime = true;
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      var listAmount = widget.message.data;
-      print("montos ${listAmount}");
-      print("montos ${listAmount}");
-    
-    });
-
-  
-  }
-
+class MyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final textStyles = Theme.of(context).textTheme;
-    // print(message.id);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-      child: Column(children: [
-        if (widget.message.imageUrl != null &&
-            widget.message.imageUrl!.isNotEmpty)
-          Image.network(widget.message.imageUrl!),
-        const SizedBox(height: 10),
-        Text(widget.message.title ?? '', style: textStyles.titleLarge),
-        const SizedBox(height: 30),
-        Text(widget.message.message ?? ''),
-        Text(widget.message.data ?? ''),
-
-        const SizedBox(height: 30),
-        const SizedBox(height: 30),
-        Text(widget.message.id.toString()),
-
-        // const Divider(),
-        // Text(dataNotification[1].name ?? ''),
-        Container(
-          decoration: BoxDecoration(
-              // Color de fondo
-              ),
-          child: SizedBox(
-            width: 400,
-            height: 400,
-            child: Align(
-              alignment: Alignment.centerLeft, // Alineación a la izquierda
-              child: ListView.builder(
-                itemCount: widget.dataNotification.length,
-                itemBuilder: (context, index) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.dataNotification[index].name ?? '',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      Text(widget.dataNotification[index].value ?? ''),
-                      const Divider()
-                    ],
-                  );
-                },
-              ),
-            ),
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9,
+      height: MediaQuery.of(context).size.width * 0.12,
+      child: ElevatedButton(
+        onPressed: () {
+          appRouter.pop();
+          print('¡Haz clic en el botón!');
+        },
+        child: Text('Volver'),
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30.0),
           ),
-        )
-      ]),
+          backgroundColor: Color.fromRGBO(19, 136, 214, 1),
+        ),
+      ),
     );
   }
 }

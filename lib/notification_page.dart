@@ -27,6 +27,7 @@ class _MyNotificationPageState extends State<NotificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Color.fromRGBO(38, 92, 178, 1),
           title: const Text('Mis notificaciones'),
         ),
         body: FutureBuilder<List<NotificationModel>>(
